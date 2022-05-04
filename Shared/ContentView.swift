@@ -6,11 +6,16 @@
 //
 
 import SwiftUI
+import Firebase
 
 struct ContentView: View {
+    @EnvironmentObject var viewModel: AuthenticationViewModel
+    
     var body: some View {
-        Text("Hello, world!")
-            .padding()
+        switch viewModel.state {
+            case .signedIn: MainView()
+            case .signedOut: LoginView()
+        }
     }
 }
 

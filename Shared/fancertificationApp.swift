@@ -10,12 +10,21 @@ import Firebase
 
 @main
 struct fancertificationApp: App {
+    @StateObject var viewModel = AuthenticationViewModel()
+    
     init() {
         FirebaseApp.configure()
+        
+        if (Auth.auth().currentUser != nil) {
+            viewModel.state = .signedIn
+        } else {
+            viewModel.state = .signedOut
+        }
     }
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(viewModel)
         }
     }
 }
