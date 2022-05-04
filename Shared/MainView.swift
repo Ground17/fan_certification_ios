@@ -12,17 +12,23 @@ struct MainView: View {
         TabView {
             CelebView()
                 .tabItem {
-                    Image(systemName: "star_outline")
+                    Image("star_outline")
+                        .foregroundColor(Color("ColorPrimary"))
+                    Text("Main")
                 }
 
             SearchView()
                 .tabItem {
-                    Image(systemName: "search")
+                    Image("search")
+                        .foregroundColor(Color("ColorPrimary"))
+                    Text("Search")
                 }
             
             SettingView()
                 .tabItem {
-                    Image(systemName: "setting")
+                    Image("setting")
+                        .foregroundColor(Color("ColorPrimary"))
+                    Text("Setting")
                 }
         }
     }

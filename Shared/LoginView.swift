@@ -17,6 +17,7 @@ struct LoginView: View {
     @State private var id: String = ""
     @State private var pw: String = ""
     @State private var isSignUp: Bool = false
+    @State private var showAlert: Bool = false
     
     @State var currentNonce: String? // apple login에만 필요
     
@@ -27,59 +28,83 @@ struct LoginView: View {
                     .resizable()
                     .aspectRatio(contentMode: ContentMode.fit)
                 TextField("Enter your email", text: $id)
+                    .padding()
+                    .background(Color.gray)
+                    .cornerRadius(5.0)
+                    .padding(.top, 20)
                 SecureField("Enter your password", text: $pw)
+                    .padding()
+                    .background(Color.gray)
+                    .cornerRadius(5.0)
+                    .padding(.bottom, 20)
                 Button(action: { viewModel.signIn(id: id, pw: pw) }) {
                     Text("Log in")
+                        .foregroundColor(Color.white)
+                        .frame(minWidth: 0, maxWidth: .infinity)
                 }
+                    .padding()
+                    .background(Color("ColorPrimary"))
+                    .cornerRadius(5.0)
                 NavigationLink(destination: SignupView(), isActive: $isSignUp) {
                     Button(action: { self.isSignUp = true }) { // navigation
                         Text("Sign up")
+                            .foregroundColor(Color("ColorPrimary"))
+                            .frame(minWidth: 0, maxWidth: .infinity)
                     }
-                }
+                        .padding()
+                        .background(Color.white)
+                        .cornerRadius(5.0)
+                        .padding(.bottom, 20)
+                }.navigationBarTitle("Log in")
                 
                 Divider()
+                    .background(Color.gray)
                 
-                GoogleSignInButton()
-                    .padding()
-                    .onTapGesture {
-                        viewModel.signInWithGoogle()
-                    }
-                
-                SignInWithAppleButton(.signIn) { request in
-                    let nonce = randomNonceString()
-                    currentNonce = nonce
-                    request.requestedScopes = [.fullName, .email]
-                    request.nonce = sha256(nonce)
-                } onCompletion: { result in
-                    switch result {
-                        case .success(let authResults):
-                            print("Authorisation successful")
-                            switch authResults.credential {
-                                case let appleIDCredential as ASAuthorizationAppleIDCredential:
+                VStack {
+                    GoogleSignInButton()
+                        .frame(minWidth: 0, maxWidth: .infinity, maxHeight: 70)
+                        .onTapGesture {
+                            viewModel.signInWithGoogle()
+                        }
+                    
+                    SignInWithAppleButton(.signIn) { request in
+                        let nonce = randomNonceString()
+                        currentNonce = nonce
+                        request.requestedScopes = [.fullName, .email]
+                        request.nonce = sha256(nonce)
+                    } onCompletion: { result in
+                        switch result {
+                            case .success(let authResults):
+                                print("Authorisation successful")
+                                switch authResults.credential {
+                                    case let appleIDCredential as ASAuthorizationAppleIDCredential:
 
-                                    guard let nonce = currentNonce else {
-                                        fatalError("Invalid state: A login callback was received, but no login request was sent.")
-                                    }
-                                    guard let appleIDToken = appleIDCredential.identityToken else {
-                                        fatalError("Invalid state: A login callback was received, but no login request was sent.")
-                                    }
-                                    guard let idTokenString = String(data: appleIDToken, encoding: .utf8) else {
-                                        print("Unable to serialize token string from data: \(appleIDToken.debugDescription)")
-                                        return
-                                    }
-                                
-                                    viewModel.signInWithApple(idTokenString: idTokenString, nonce: nonce)
-                                 
-                                default:
-                                  break
-                            }
-                        case .failure:
-                            print("Authorisation failed.")
+                                        guard let nonce = currentNonce else {
+                                            fatalError("Invalid state: A login callback was received, but no login request was sent.")
+                                        }
+                                        guard let appleIDToken = appleIDCredential.identityToken else {
+                                            fatalError("Invalid state: A login callback was received, but no login request was sent.")
+                                        }
+                                        guard let idTokenString = String(data: appleIDToken, encoding: .utf8) else {
+                                            print("Unable to serialize token string from data: \(appleIDToken.debugDescription)")
+                                            return
+                                        }
+                                    
+                                        viewModel.signInWithApple(idTokenString: idTokenString, nonce: nonce)
+                                     
+                                    default:
+                                      break
+                                }
+                            case .failure:
+                                print("Authorisation failed.")
+                        }
                     }
-                }
+                    .signInWithAppleButtonStyle(.whiteOutline)
+                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: 70)
+                }.padding()
             }
             .padding()
-        }.navigationBarTitle("Log in")
+        }
     }
     
     //Hashing function using CryptoKit

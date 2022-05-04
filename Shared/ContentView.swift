@@ -17,6 +17,7 @@ struct ContentView: View {
             case .signedOut: LoginView()
         }
     }
+    
 }
 
 struct ContentView_Previews: PreviewProvider {

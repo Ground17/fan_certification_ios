@@ -114,4 +114,8 @@ iOSInjectionProject/
 
 # End of https://www.gitignore.io/api/xcode,swift,cocoapods
 
+# Contains firebase functions
 firebase/
+
+# Contains YT API, Admob Id, ...
+Shared/keys.swift

@@ -14,17 +14,15 @@ struct fancertificationApp: App {
     
     init() {
         FirebaseApp.configure()
-        
-        if (Auth.auth().currentUser != nil) {
-            viewModel.state = .signedIn
-        } else {
-            viewModel.state = .signedOut
-        }
     }
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(viewModel)
+                .onAppear() {
+                    viewModel.checkSignIn()
+                }
         }
     }
 }

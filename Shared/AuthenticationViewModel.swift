@@ -9,25 +9,42 @@ import Firebase
 import GoogleSignIn
 
 class AuthenticationViewModel: ObservableObject {
-
     enum SignInState {
         case signedIn
         case signedOut
     }
+    
+    enum SignUpState {
+        case signedUp
+        case none
+    }
 
     @Published var state: SignInState = .signedOut
     @Published var loading: Bool = false
+    
+    @Published var showAlert: Bool = false
+    @Published var status: SignUpState = .none
+    @Published var alertText: String = ""
+    
+    func closeAlert() {
+        self.showAlert = false
+    }
     
     func signIn(id: String, pw: String) {
         self.loading = true
         Auth.auth().signIn(withEmail: id, password: pw) { (result, error) in
             if error != nil {
                 print(error?.localizedDescription ?? "")
+                self.showAlert = true
+                self.alertText = error?.localizedDescription ?? ""
             } else {
                 print("success")
                 if ((Auth.auth().currentUser?.isEmailVerified) != nil) {
                     self.state = .signedIn
                 } else {
+                    self.showAlert = true
+                    self.alertText = "A confirmation email has been sent to verify that this is a valid email. Please check your mailbox."
+                    
                     Auth.auth().currentUser?.sendEmailVerification { (error) in
                         if error != nil {
                             print("email send error")
@@ -41,18 +58,38 @@ class AuthenticationViewModel: ObservableObject {
     
     func signUp(id: String, pw: String, pwConfirm: String) {
         self.loading = true
+        
+        guard id != "" && pw != "" && pwConfirm != "" else {
+            self.showAlert = true
+            self.alertText = "Fill in the blank(s)."
+            return
+        }
+        
+        guard pw == pwConfirm else {
+            self.showAlert = true
+            self.alertText = "Please check if the password and password confirmation are the same."
+            return
+        }
+        
         Auth.auth().createUser(withEmail: id, password: pw) { authResult, error in
             guard error == nil else {
                 self.loading = false
+                self.showAlert = true
+                self.alertText = "Log in Error"
                 return
             }
             
             switch authResult {
                 case .none:
                     print("Could not create account.")
+                    self.showAlert = true
+                    self.alertText = "Could not create account."
                     self.loading = false
                 case .some(_):
                     print("User created")
+                    self.showAlert = true
+                    self.alertText = "A confirmation email has been sent to verify that this is a valid email. Please check your mailbox."
+                    self.status = .signedUp
                 
                     Auth.auth().currentUser?.sendEmailVerification { (error) in
                         if error != nil {
@@ -130,9 +167,18 @@ class AuthenticationViewModel: ObservableObject {
     func signOut() {
         let firebaseAuth = Auth.auth()
         do {
-          try firebaseAuth.signOut()
+            try firebaseAuth.signOut()
+            self.state = .signedOut
         } catch let signOutError as NSError {
-          print("Error signing out: %@", signOutError)
+            print("Error signing out: %@", signOutError)
+        }
+    }
+    
+    func checkSignIn() {
+        if (Auth.auth().currentUser != nil) {
+            self.state = .signedIn
+        } else {
+            self.state = .signedOut
         }
     }
 }
