@@ -11,7 +11,8 @@ import GoogleMobileAds
 
 @main
 struct fancertificationApp: App {
-    @StateObject var viewModel = AuthenticationViewModel()
+    @StateObject var authenticationViewModel = AuthenticationViewModel()
+    @StateObject var dataViewModel = DataViewModel()
     
     init() {
         FirebaseApp.configure()
@@ -21,9 +22,10 @@ struct fancertificationApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environmentObject(viewModel)
+                .environmentObject(authenticationViewModel)
+                .environmentObject(dataViewModel)
                 .onAppear() {
-                    viewModel.checkSignIn()
+                    authenticationViewModel.checkSignIn()
                 }
         }
     }

@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct MainView: View {
+    @EnvironmentObject var viewModel: DataViewModel
+    
     var body: some View {
         TabView {
             CelebView()
@@ -30,6 +32,15 @@ struct MainView: View {
                         .foregroundColor(Color("ColorPrimary"))
                     Text("Setting")
                 }
+        }
+        .alert(isPresented: $viewModel.showAlert) {
+            Alert(
+                title: Text("Alert"),
+                message: Text(viewModel.alertText),
+                dismissButton: .default(Text("OK"), action: {
+                    viewModel.closeAlert()
+                })
+            )
         }
     }
 }
