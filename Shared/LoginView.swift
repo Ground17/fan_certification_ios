@@ -29,11 +29,13 @@ struct LoginView: View {
                     .aspectRatio(contentMode: ContentMode.fit)
                 TextField("Enter your email", text: $id)
                     .padding()
+                    .autocapitalization(.none)
                     .background(Color.gray)
                     .cornerRadius(5.0)
                     .padding(.top, 20)
                 SecureField("Enter your password", text: $pw)
                     .padding()
+                    .autocapitalization(.none)
                     .background(Color.gray)
                     .cornerRadius(5.0)
                     .padding(.bottom, 20)
@@ -104,6 +106,19 @@ struct LoginView: View {
                 }.padding()
             }
             .padding()
+        }
+        .alert(isPresented: $viewModel.showAlert) {
+            Alert(
+                title: Text("Alert"),
+                message: Text(viewModel.alertText),
+                dismissButton: .default(Text("OK"), action: {
+                    viewModel.closeAlert()
+                    if viewModel.signUp == .signedUp {
+                        viewModel.signUp = .none
+                        self.isSignUp = false
+                    }
+                })
+            )
         }
     }
     

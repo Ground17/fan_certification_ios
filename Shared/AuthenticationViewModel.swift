@@ -23,7 +23,7 @@ class AuthenticationViewModel: ObservableObject {
     @Published var loading: Bool = false
     
     @Published var showAlert: Bool = false
-    @Published var status: SignUpState = .none
+    @Published var signUp: SignUpState = .none
     @Published var alertText: String = ""
     
     func closeAlert() {
@@ -32,6 +32,13 @@ class AuthenticationViewModel: ObservableObject {
     
     func signIn(id: String, pw: String) {
         self.loading = true
+        guard id != "" && pw != "" else {
+            self.showAlert = true
+            self.alertText = "Fill in the blank(s)."
+            self.loading = false
+            return
+        }
+        
         Auth.auth().signIn(withEmail: id, password: pw) { (result, error) in
             if error != nil {
                 print(error?.localizedDescription ?? "")
@@ -39,7 +46,7 @@ class AuthenticationViewModel: ObservableObject {
                 self.alertText = error?.localizedDescription ?? ""
             } else {
                 print("success")
-                if ((Auth.auth().currentUser?.isEmailVerified) != nil) {
+                if (Auth.auth().currentUser != nil && Auth.auth().currentUser!.isEmailVerified) {
                     self.state = .signedIn
                 } else {
                     self.showAlert = true
@@ -62,12 +69,14 @@ class AuthenticationViewModel: ObservableObject {
         guard id != "" && pw != "" && pwConfirm != "" else {
             self.showAlert = true
             self.alertText = "Fill in the blank(s)."
+            self.loading = false
             return
         }
         
         guard pw == pwConfirm else {
             self.showAlert = true
             self.alertText = "Please check if the password and password confirmation are the same."
+            self.loading = false
             return
         }
         
@@ -75,7 +84,7 @@ class AuthenticationViewModel: ObservableObject {
             guard error == nil else {
                 self.loading = false
                 self.showAlert = true
-                self.alertText = "Log in Error"
+                self.alertText = error?.localizedDescription ?? ""
                 return
             }
             
@@ -89,7 +98,7 @@ class AuthenticationViewModel: ObservableObject {
                     print("User created")
                     self.showAlert = true
                     self.alertText = "A confirmation email has been sent to verify that this is a valid email. Please check your mailbox."
-                    self.status = .signedUp
+                    self.signUp = .signedUp
                 
                     Auth.auth().currentUser?.sendEmailVerification { (error) in
                         if error != nil {
@@ -109,6 +118,8 @@ class AuthenticationViewModel: ObservableObject {
                 // you're sending the SHA256-hashed nonce as a hex string with
                 // your request to Apple.
                 print(error?.localizedDescription as Any)
+                self.showAlert = true
+                self.alertText = error?.localizedDescription ?? "Log in Error"
                 return
             }
             self.state = .signedIn
@@ -145,8 +156,10 @@ class AuthenticationViewModel: ObservableObject {
     private func authenticateUser(for user: GIDGoogleUser?, with error: Error?) {
       // 1
       if let error = error {
-        print(error.localizedDescription)
-        return
+          print(error.localizedDescription)
+          self.showAlert = true
+          self.alertText = error.localizedDescription
+          return
       }
       
       // 2
@@ -157,9 +170,11 @@ class AuthenticationViewModel: ObservableObject {
       // 3
       Auth.auth().signIn(with: credential) { [unowned self] (_, error) in
         if let error = error {
-          print(error.localizedDescription)
+            print(error.localizedDescription)
+            self.showAlert = true
+            self.alertText = error.localizedDescription
         } else {
-          self.state = .signedIn
+            self.state = .signedIn
         }
       }
     }
@@ -175,7 +190,7 @@ class AuthenticationViewModel: ObservableObject {
     }
     
     func checkSignIn() {
-        if (Auth.auth().currentUser != nil) {
+        if (Auth.auth().currentUser != nil && Auth.auth().currentUser!.isEmailVerified) {
             self.state = .signedIn
         } else {
             self.state = .signedOut

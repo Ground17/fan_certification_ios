@@ -25,15 +25,18 @@ struct SignupView: View {
                 .aspectRatio(contentMode: ContentMode.fit)
             TextField("Enter your email", text: $id)
                 .padding()
+                .autocapitalization(.none)
                 .background(Color.gray)
                 .cornerRadius(5.0)
                 .padding(.top, 20)
             SecureField("Enter your password", text: $pw)
                 .padding()
+                .autocapitalization(.none)
                 .background(Color.gray)
                 .cornerRadius(5.0)
             SecureField("Enter your password Again", text: $pwConfirm)
                 .padding()
+                .autocapitalization(.none)
                 .background(Color.gray)
                 .cornerRadius(5.0)
                 .padding(.bottom, 20)
@@ -50,19 +53,6 @@ struct SignupView: View {
         }
         .padding()
         .navigationBarTitle("Sign up")
-        .alert(isPresented: $viewModel.showAlert) {
-            Alert(
-                title: Text("Alert"),
-                message: Text(viewModel.alertText),
-                dismissButton: .default(Text("OK"), action: {
-                    viewModel.closeAlert()
-                    if viewModel.status == .signedUp {
-                        viewModel.status = .none
-                        self.presentationMode.wrappedValue.dismiss()
-                    }
-                })
-            )
-        }
     }
 }
 

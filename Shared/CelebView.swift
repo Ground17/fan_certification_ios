@@ -6,20 +6,14 @@
 //
 
 import SwiftUI
+import GoogleMobileAds
 
 struct CelebView: View {
     @EnvironmentObject var viewModel: AuthenticationViewModel
     
     var body: some View {
-        Button(action: viewModel.signOut) {
-            Text("Sign out")
-                .foregroundColor(.white)
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color(.systemIndigo))
-                .cornerRadius(12)
-                .padding()
-        }
+        GADBannerViewController()
+                .frame(width: GADAdSizeBanner.size.width, height: GADAdSizeBanner.size.height)
     }
 }
 

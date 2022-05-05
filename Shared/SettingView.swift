@@ -9,12 +9,18 @@ import SwiftUI
 import Firebase
 
 struct SettingView: View {
-    var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
-    }
+    @EnvironmentObject var viewModel: AuthenticationViewModel
     
-    func signOutUser() {
-        
+    var body: some View {
+        Button(action: viewModel.signOut) {
+            Text("Sign out")
+                .foregroundColor(.white)
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color(.systemIndigo))
+                .cornerRadius(12)
+                .padding()
+        }
     }
 }
 
