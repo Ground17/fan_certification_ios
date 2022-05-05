@@ -62,12 +62,15 @@ class DataViewModel: ObservableObject {
         }.resume()
     }
     
-    func getCeleb(platform: String, account: String) {
+    func getCeleb() {
         let docRef = db.collection("Users").document(Auth.auth().currentUser!.uid)
         docRef.getDocument { (document, error) in
             if let document = document, document.exists {
+                guard (document["celeb"] as? [[String : Any]]) != nil else { return }
                 let dataDescription = document.data().map(String.init(describing:)) ?? "nil"
                 print("Document data: \(dataDescription)")
+                
+                self.celeb = document["celeb"] as! [Celeb]
             } else {
                 print("Document does not exist")
             }
@@ -84,8 +87,14 @@ class DataViewModel: ObservableObject {
             }
             // ...
           }
-          if let data = result?.data as? [String: Any], let text = data[""] as? String {
-            self.resultField.text = text
+          if let data = result?.data as? [String: Any], let status = data[""] as? Int {
+              if status == 200 { // success
+                  self.getCeleb()
+              } else {
+                  if let message = data["message"] as? String {
+                      print(message)
+                  }
+              }
           }
         }
     }
@@ -100,8 +109,14 @@ class DataViewModel: ObservableObject {
             }
             // ...
           }
-          if let data = result?.data as? [String: Any], let text = data[""] as? String {
-            self.resultField.text = text
+          if let data = result?.data as? [String: Any], let status = data["status"] as? Int {
+              if status == 200 { // success
+                  self.getCeleb()
+              } else {
+                  if let message = data["message"] as? String {
+                      print(message)
+                  }
+              }
           }
         }
     }

@@ -99,6 +99,14 @@ struct ProfileCell: View {
                     .cornerRadius(20, antialiased: true)
             }
         }
+        .alert(isPresented: $viewModel.showAlert) {
+            Alert(
+                title: Text("Alert"),
+                message: Text(viewModel.alertText),
+                primaryButton: .destructive(Text("Add"), action: {
+                    
+                }), secondaryButton: .cancel())
+        }
         .onTapGesture {
             print("The whole HStack is tappable now!")
         }

@@ -18,6 +18,13 @@ struct MainView: View {
                         .foregroundColor(Color("ColorPrimary"))
                     Text("Main")
                 }
+            
+            RankView()
+                .tabItem {
+                    Image("star_outline")
+                        .foregroundColor(Color("ColorPrimary"))
+                    Text("Ranking")
+                }
 
             SearchView()
                 .tabItem {
@@ -32,15 +39,6 @@ struct MainView: View {
                         .foregroundColor(Color("ColorPrimary"))
                     Text("Setting")
                 }
-        }
-        .alert(isPresented: $viewModel.showAlert) {
-            Alert(
-                title: Text("Alert"),
-                message: Text(viewModel.alertText),
-                dismissButton: .default(Text("OK"), action: {
-                    viewModel.closeAlert()
-                })
-            )
         }
     }
 }

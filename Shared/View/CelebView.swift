@@ -16,7 +16,6 @@ struct CelebView: View {
             GADBannerViewController()
                     .frame(width: GADAdSizeBanner.size.width, height: GADAdSizeBanner.size.height)
             List(self.viewModel.celeb, id: \.account) { celeb in
-                //각 Row에 CarMakerCell를 리턴합니다.
                 CelebCell(celeb: celeb)
             }
             Spacer()
@@ -48,6 +47,22 @@ struct CelebCell: View {
                     .resizable()
                     .frame(width: 50, height: 50)
             }
+        }
+        .alert(isPresented: $viewModel.showAlert) {
+            Alert(
+                title: Text("Alert"),
+                message: Text(viewModel.alertText),
+                primaryButton: .destructive(Text("Delete"), action: {
+                    
+                }), secondaryButton: .cancel())
+        }
+        .alert(isPresented: $viewModel.showAlert) {
+            Alert(
+                title: Text("Alert"),
+                message: Text(viewModel.alertText),
+                primaryButton: .destructive(Text("Delete"), action: {
+                    
+                }), secondaryButton: .cancel())
         }
     }
 }
