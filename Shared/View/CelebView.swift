@@ -12,13 +12,27 @@ struct CelebView: View {
     @EnvironmentObject var viewModel: DataViewModel
     
     var body: some View {
-        VStack {
-            GADBannerViewController()
-                    .frame(width: GADAdSizeBanner.size.width, height: GADAdSizeBanner.size.height)
-            List(self.viewModel.celeb, id: \.account) { celeb in
-                CelebCell(celeb: celeb)
+        NavigationView {
+            VStack {
+                GADBannerViewController()
+                        .frame(width: GADAdSizeBanner.size.width, height: GADAdSizeBanner.size.height)
+                List(self.viewModel.celeb, id: \.account) { celeb in
+                    CelebCell(celeb: celeb)
+                        .environmentObject(viewModel)
+                }
             }
-            Spacer()
+            .pickerStyle(SegmentedPickerStyle())
+            .navigationBarTitle("Main", displayMode: .inline)
+            .navigationBarHidden(true)
+            .alert(isPresented: $viewModel.showAlert) {
+                Alert(
+                    title: Text("Alert"),
+                    message: Text(viewModel.alertText),
+                    dismissButton: .default(Text("OK"), action: {
+                        viewModel.closeAlert()
+                    })
+                )
+            }
         }
     }
 }
@@ -26,33 +40,58 @@ struct CelebView: View {
 struct CelebCell: View {
     @EnvironmentObject var viewModel: DataViewModel
     let celeb: Celeb
+    
+    @State private var isExpanding = false
 
     var body: some View {
-        HStack {
-            Image(celeb.url)
-                    .resizable()
-                    .frame(width: 50, height: 50)
-                    .cornerRadius(25)
-
-            VStack(alignment: .leading) {
-                Text(celeb.title).font(.largeTitle)
-                // Text(celeb.count)
-                Text(celeb.since)
+        VStack {
+            HStack {
+                URLImageView(withURL: celeb.url)
+                    .padding(.leading)
+                
+                Text(celeb.title)
+                    .bold()
+                Spacer()
+                Image("arrow-up")
+                    .padding(.trailing)
+            }
+            .padding()
+            .onTapGesture {
+                isExpanding = !isExpanding
+                print("The whole HStack is tappable now!")
             }
             
-            Button(action: {
-                // 하트 추가
-            }) {
-                Image(celeb.url)
-                    .resizable()
-                    .frame(width: 50, height: 50)
+            if isExpanding {
+                VStack {
+                    HStack {
+                        Text("delete")
+                        Spacer()
+                        Text("refresh")
+                        Text("launch")
+                    }
+                    HStack {
+                        VStack { // 팬이 된 기간
+                            Text("Period of being a fan")
+                            Text("100 days")
+                            Text("\(celeb.since)")
+                        }
+                        VStack { // 좋아요
+                            Text("Likes")
+                            Text("\(celeb.count)")
+                            Text("\(celeb.recent)")
+                        }
+                    }
+                }
+                .padding(.trailing, 10)
+                .transition(.move(edge: .trailing))
+                .animation(.default)
             }
         }
-        .alert(isPresented: $viewModel.showAlert) {
+        .alert(isPresented: $viewModel.showCelebConfirm) {
             Alert(
-                title: Text("Alert"),
+                title: Text("Comfirm"),
                 message: Text(viewModel.alertText),
-                primaryButton: .destructive(Text("Delete"), action: {
+                primaryButton: .destructive(Text("Add"), action: {
                     
                 }), secondaryButton: .cancel())
         }
