@@ -55,6 +55,8 @@ struct SearchView: View { // webview로 확인
          
                     if isEditing {
                         Button(action: {
+                            // Dismiss the keyboard
+                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                             self.isEditing = false
                             viewModel.getYTChannel(query: searchText)
                         }) {
@@ -67,9 +69,21 @@ struct SearchView: View { // webview로 확인
                 }
                 List(viewModel.items, id: \.snippet.channelId) { item in
                     ProfileCell(profile: item)
+                        .environmentObject(viewModel)
                 }
             }
             .pickerStyle(SegmentedPickerStyle())
+            .navigationBarTitle("Search", displayMode: .inline)
+            .navigationBarHidden(true)
+            .alert(isPresented: $viewModel.showAlert) {
+                Alert(
+                    title: Text("Alert"),
+                    message: Text(viewModel.alertText),
+                    dismissButton: .default(Text("OK"), action: {
+                        viewModel.closeAlert()
+                    })
+                )
+            }
         }
     }
 }
@@ -80,34 +94,31 @@ struct ProfileCell: View {
 
     var body: some View {
         HStack {
-            Image(profile.snippet.thumbnails.default.url)
-                    .resizable()
-                    .frame(width: 50, height: 50)
-                    .cornerRadius(25)
+            URLImageView(withURL: profile.snippet.thumbnails.default.url)
+                .padding(.leading)
 
             VStack(alignment: .leading) {
-                Text(profile.snippet.title).font(.largeTitle)
-                Text(profile.snippet.description)
+                Text(profile.snippet.title).bold()
+                Text(profile.snippet.description).font(.caption)
+                NavigationLink(destination: CustomWebView(url: "https://www.youtube.com/channel/\(profile.snippet.channelId)")) {
+                    Text("Profile Link")
+                        .font(.caption2)
+                        .bold()
+                        .foregroundColor(.red)
+                }
             }
-            
-            NavigationLink(destination: CustomWebView(url: "https://www.youtube.com/channel/\(profile.snippet.channelId)")) {
-                Text("Profile Link")
-                    .edgesIgnoringSafeArea(.all)
-                    .padding()
-                    .background(Color.green)
-                    .foregroundColor(.black)
-                    .cornerRadius(20, antialiased: true)
-            }
+            .padding()
         }
-        .alert(isPresented: $viewModel.showAlert) {
+        .alert(isPresented: $viewModel.showSearchConfirm) {
             Alert(
-                title: Text("Alert"),
-                message: Text(viewModel.alertText),
+                title: Text("Confirm"),
+                message: Text("Are you sure you want to add this profile?"),
                 primaryButton: .destructive(Text("Add"), action: {
-                    
+                    // viewModel.manageFollow(platform: "0", account: profile.snippet.channelId, method: "Add", title: profile.snippet.title, url: profile.snippet.thumbnails.default.url)
                 }), secondaryButton: .cancel())
         }
         .onTapGesture {
+            viewModel.showSearchConfirm = true
             print("The whole HStack is tappable now!")
         }
     }

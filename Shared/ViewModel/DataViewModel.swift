@@ -11,6 +11,8 @@ class DataViewModel: ObservableObject {
     @Published var loading: Bool = false
     
     @Published var showAlert: Bool = false
+    @Published var showCelebConfirm: Bool = false
+    @Published var showSearchConfirm: Bool = false
     @Published var alertText: String = ""
     
     @Published var items: [Item] = []
@@ -25,13 +27,35 @@ class DataViewModel: ObservableObject {
     
     func getYTChannel (query: String) {
         requestGet(url: "https://www.googleapis.com/youtube/v3/search?part=id,snippet&type=channel&q=\(query)&key=\(Keys.YTAPIKEY)") { (success, data) in
-            print(data)
-            self.items = data
+            DispatchQueue.main.async {
+                self.items = data
+            }
         }
     }
     
+    private func transformURLString(_ string: String) -> URLComponents? {
+        guard let urlPath = string.components(separatedBy: "?").first else {
+            return nil
+        }
+        var components = URLComponents(string: urlPath)
+        if let queryString = string.components(separatedBy: "?").last {
+            components?.queryItems = []
+            let queryItems = queryString.components(separatedBy: "&")
+            for queryItem in queryItems {
+                guard let itemName = queryItem.components(separatedBy: "=").first,
+                      let itemValue = queryItem.components(separatedBy: "=").last else {
+                        continue
+                }
+                components?.queryItems?.append(URLQueryItem(name: itemName, value: itemValue))
+            }
+        }
+        return components!
+    }
+    
     private func requestGet(url: String, completionHandler: @escaping (Bool, [Item]) -> Void) {
-        guard let url = URL(string: url) else {
+        let components = transformURLString(url)
+
+        guard let url = components?.url else {
             print("Error: cannot create URL")
             return
         }
@@ -70,9 +94,22 @@ class DataViewModel: ObservableObject {
                 let dataDescription = document.data().map(String.init(describing:)) ?? "nil"
                 print("Document data: \(dataDescription)")
                 
-                self.celeb = document["celeb"] as! [Celeb]
+                DispatchQueue.main.async {
+                    self.celeb = document["celeb"] as! [Celeb]
+                }
             } else {
                 print("Document does not exist")
+                let docData: [String: Any] = [
+                    "celeb": []
+                ]
+                
+                docRef.setData(docData) { err in
+                    if let err = err {
+                        print("Error writing document: \(err)")
+                    } else {
+                        print("Document successfully written!")
+                    }
+                }
             }
         }
     }
@@ -99,8 +136,8 @@ class DataViewModel: ObservableObject {
         }
     }
     
-    func manageFollow(platform: String, account: String, method: String = "add", url: String?) {
-        functions.httpsCallable("manageFollow").call(["platform": platform, "account": account, "method": method]) { result, error in
+    func manageFollow(platform: String, account: String, method: String = "add", title: String?, url: String?) {
+        functions.httpsCallable("manageFollow").call(["platform": platform, "account": account, "method": method, "title": title, "url": url]) { result, error in
           if let error = error as NSError? {
             if error.domain == FunctionsErrorDomain {
               let code = FunctionsErrorCode(rawValue: error.code)
@@ -111,6 +148,8 @@ class DataViewModel: ObservableObject {
           }
           if let data = result?.data as? [String: Any], let status = data["status"] as? Int {
               if status == 200 { // success
+                  self.showAlert = true
+                  self.alertText = "Successfully added."
                   self.getCeleb()
               } else {
                   if let message = data["message"] as? String {

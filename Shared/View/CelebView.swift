@@ -56,14 +56,6 @@ struct CelebCell: View {
                     
                 }), secondaryButton: .cancel())
         }
-        .alert(isPresented: $viewModel.showAlert) {
-            Alert(
-                title: Text("Alert"),
-                message: Text(viewModel.alertText),
-                primaryButton: .destructive(Text("Delete"), action: {
-                    
-                }), secondaryButton: .cancel())
-        }
     }
 }
 

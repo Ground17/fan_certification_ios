@@ -14,7 +14,7 @@ struct MainView: View {
         TabView {
             CelebView()
                 .tabItem {
-                    Image("star_outline")
+                    Image("star")
                         .foregroundColor(Color("ColorPrimary"))
                     Text("Main")
                 }
