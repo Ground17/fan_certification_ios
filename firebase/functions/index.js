@@ -162,7 +162,7 @@ exports.manageFollow = functions.https.onCall(async (data, context) => {
                     });
                 }
             }
-        } else { // delete
+        } else if (method == "delete") { // delete
             // transaction
             const YouTubeRef = admin.firestore().collection('YouTube').doc(account);
             const myRef = admin.firestore().collection('Users').doc(context.auth.uid);

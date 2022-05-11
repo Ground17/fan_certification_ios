@@ -149,7 +149,15 @@ class DataViewModel: ObservableObject {
           if let data = result?.data as? [String: Any], let status = data["status"] as? Int {
               if status == 200 { // success
                   self.showAlert = true
-                  self.alertText = "Successfully added."
+                  if method == "add" {
+                      self.alertText = "Successfully added."
+                  } else if method == "update" {
+                      self.alertText = "Successfully updated."
+                  } else if method == "delete" {
+                      self.alertText = "Successfully deleted."
+                  } else {
+                      self.alertText = "Method error is occured..."
+                  }
                   self.getCeleb()
               } else {
                   if let message = data["message"] as? String {

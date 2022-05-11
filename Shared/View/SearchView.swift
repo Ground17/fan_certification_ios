@@ -109,6 +109,10 @@ struct ProfileCell: View {
             }
             .padding()
         }
+        .onTapGesture {
+            viewModel.showSearchConfirm = true
+            print("The whole HStack is tappable now!")
+        }
         .alert(isPresented: $viewModel.showSearchConfirm) {
             Alert(
                 title: Text("Confirm"),
@@ -116,10 +120,6 @@ struct ProfileCell: View {
                 primaryButton: .destructive(Text("Add"), action: {
                     // viewModel.manageFollow(platform: "0", account: profile.snippet.channelId, method: "Add", title: profile.snippet.title, url: profile.snippet.thumbnails.default.url)
                 }), secondaryButton: .cancel())
-        }
-        .onTapGesture {
-            viewModel.showSearchConfirm = true
-            print("The whole HStack is tappable now!")
         }
     }
 }
