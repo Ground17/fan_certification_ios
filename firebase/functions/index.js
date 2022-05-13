@@ -5,7 +5,7 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 admin.initializeApp();
 
-const https = require('https');
+// const https = require('https');
 
 // Create and Deploy Your First Cloud Functions
 // https://firebase.google.com/docs/functions/write-firebase-functions
@@ -38,7 +38,7 @@ exports.addHeart = functions.https.onCall(async (data, context) => {
         const YouTubeRef = admin.firestore().collection('YouTube').doc(account);
         const myRef = admin.firestore().collection('Users').doc(context.auth.uid);
         try {
-            await admin.firestore().runTransaction(async (t) => {
+            return await admin.firestore().runTransaction(async (t) => {
                 const YouTubeDoc = await t.get(YouTubeRef);
                 const myDoc = await t.get(myRef);
 
@@ -52,7 +52,7 @@ exports.addHeart = functions.https.onCall(async (data, context) => {
                         //       by updating the population using FieldValue.increment()
                         t.update(YouTubeRef, {count: hearts});
 
-                        celeb[i].recent = admin.firestore.Timestamp.fromMillis(now).getTime();
+                        celeb[i].recent = now;
                         celeb[i].count = celeb[i].count + 1;
                         t.update(myRef, {celeb: celeb});
                         break;
@@ -60,10 +60,15 @@ exports.addHeart = functions.https.onCall(async (data, context) => {
                         throw 'Sorry! Try after 5 minutes.';
                     }
                 }
+            })
+            .then(() => {
+                console.log('Transaction success!');
+                return {status: 200, message: "success"};
+            })
+            .catch((e) => {
+                console.log('Transaction failure:', e);
+                return {status: 400, message: e};
             });
-          
-            console.log('Transaction success!');
-            return {status: 200, message: "success"};
         } catch (e) {
             console.log('Transaction failure:', e);
             return {status: 400, message: e};
@@ -108,15 +113,21 @@ exports.manageFollow = functions.https.onCall(async (data, context) => {
     }
 
     const celebDoc = await admin.firestore().collection('Users').doc(context.auth.uid).get();
-    if (celebDoc.exist) {
+    if (celebDoc.exists) {
         let celeb = celebDoc.data().celeb || [];
         if (method == "add") { // add
+            for (let i = 0; i < celeb.length; i++) { // check that celeb already exists.
+                if (celeb[i].account == account && celeb[i].platform == platform) {
+                    return {status: 400, message: "Already exists."};
+                }
+            }
+
             if (celeb.length < 3) {
                 // transaction
                 const YouTubeRef = admin.firestore().collection('YouTube').doc(account);
                 const myRef = admin.firestore().collection('Users').doc(context.auth.uid);
                 try {
-                    await admin.firestore().runTransaction(async (t) => {
+                    return await admin.firestore().runTransaction(async (t) => {
                         const YouTubeDoc = await t.get(YouTubeRef);
                         const myDoc = await t.get(myRef);
 
@@ -125,26 +136,31 @@ exports.manageFollow = functions.https.onCall(async (data, context) => {
                             account: account,
                             count: 0,
                             platform: platform,
-                            recent: admin.firestore.Timestamp.fromMillis(now).getTime(),
-                            since: admin.firestore.Timestamp.fromMillis(now).getTime(),
+                            recent: now,
+                            since: now,
                             title: title,
                             url: profileURL
                         });
 
                         if (!YouTubeDoc.exists) {
                             t.set(YouTubeRef, {count: 0, follow: 1});
+                        } else {
+                            t.update(YouTubeRef, {follow: admin.firestore.FieldValue.increment(1)});
                         }
 
                         t.update(myRef, {celeb: celeb});
+                    })
+                    .then(() => {
+                        console.log('Transaction success!');
+                        return {status: 200, message: "success"};
+                    })
+                    .catch((e) => {
+                        console.log('Transaction failure:', e);
+                        return {status: 400, message: e};
                     });
-                
-                    console.log('Transaction success!');
-                    return {status: 200, message: "success"};
                 } catch (e) {
-                    console.log('Transaction failure:', e);
                     return {status: 400, message: e};
                 }
-                
             } else {
                 return {status: 400, message: "Add limit: 3"}
             }
@@ -167,7 +183,7 @@ exports.manageFollow = functions.https.onCall(async (data, context) => {
             const YouTubeRef = admin.firestore().collection('YouTube').doc(account);
             const myRef = admin.firestore().collection('Users').doc(context.auth.uid);
             try {
-                await admin.firestore().runTransaction(async (t) => {
+                return await admin.firestore().runTransaction(async (t) => {
                     const YouTubeDoc = await t.get(YouTubeRef);
                     const myDoc = await t.get(myRef);
 
@@ -180,10 +196,15 @@ exports.manageFollow = functions.https.onCall(async (data, context) => {
                             break;
                         }
                     }
+                })
+                .then(() => {
+                    console.log('Transaction success!');
+                    return {status: 200, message: "success"};
+                })
+                .catch((e) => {
+                    console.log('Transaction failure:', e);
+                    return {status: 400, message: e};
                 });
-            
-                console.log('Transaction success!');
-                return {status: 200, message: "success"};
             } catch (e) {
                 console.log('Transaction failure:', e);
                 return {status: 400, message: e};
@@ -193,5 +214,5 @@ exports.manageFollow = functions.https.onCall(async (data, context) => {
         return {status: 400, message: "Your data doesn't exist."}
     }
 
-    return {status: 400, message: "Unknown error."}
+    return {status: 400, message: "Unknown error"}
 });

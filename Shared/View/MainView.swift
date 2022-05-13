@@ -9,15 +9,17 @@ import SwiftUI
 
 struct MainView: View {
     @EnvironmentObject var viewModel: DataViewModel
+    @State private var tabSelection = 0
     
     var body: some View {
-        TabView {
-            CelebView()
+        TabView (selection: $tabSelection) {
+            CelebView(tabSelection: $tabSelection)
                 .tabItem {
                     Image("star")
                         .foregroundColor(Color("ColorPrimary"))
                     Text("Main")
                 }
+                .tag(0)
             
             RankView()
                 .tabItem {
@@ -25,6 +27,7 @@ struct MainView: View {
                         .foregroundColor(Color("ColorPrimary"))
                     Text("Ranking")
                 }
+                .tag(1)
 
             SearchView()
                 .tabItem {
@@ -32,6 +35,7 @@ struct MainView: View {
                         .foregroundColor(Color("ColorPrimary"))
                     Text("Search")
                 }
+                .tag(2)
             
             SettingView()
                 .tabItem {
@@ -39,6 +43,7 @@ struct MainView: View {
                         .foregroundColor(Color("ColorPrimary"))
                     Text("Setting")
                 }
+                .tag(3)
         }
     }
 }

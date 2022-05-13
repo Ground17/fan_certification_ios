@@ -11,9 +11,14 @@ class DataViewModel: ObservableObject {
     @Published var loading: Bool = false
     
     @Published var showAlert: Bool = false
-    @Published var showCelebConfirm: Bool = false
+    @Published var showCelebDeleteConfirm: Bool = false
+    @Published var showCelebUpdateConfirm: Bool = false
+    @Published var showCelebCountConfirm: Bool = false
     @Published var showSearchConfirm: Bool = false
     @Published var alertText: String = ""
+    
+    @Published var dateFormatter = DateFormatter()
+    
     
     @Published var items: [Item] = []
     @Published var celeb: [Celeb] = []
@@ -25,10 +30,16 @@ class DataViewModel: ObservableObject {
         self.showAlert = false
     }
     
-    func getYTChannel (query: String) {
+    func getYTChannel (query: String, update: Bool = false) {
         requestGet(url: "https://www.googleapis.com/youtube/v3/search?part=id,snippet&type=channel&q=\(query)&key=\(Keys.YTAPIKEY)") { (success, data) in
-            DispatchQueue.main.async {
-                self.items = data
+            if update {
+                if data.count > 0 {
+                    self.manageFollow(platform: "0", account: query, method: "update", title: data[0].snippet.title, url: data[0].snippet.thumbnails.default.url)
+                }
+            } else {
+                DispatchQueue.main.async {
+                    self.items = data
+                }
             }
         }
     }
@@ -87,16 +98,19 @@ class DataViewModel: ObservableObject {
     }
     
     func getCeleb() {
+        self.loading = true
         let docRef = db.collection("Users").document(Auth.auth().currentUser!.uid)
         docRef.getDocument { (document, error) in
             if let document = document, document.exists {
                 guard (document["celeb"] as? [[String : Any]]) != nil else { return }
                 let dataDescription = document.data().map(String.init(describing:)) ?? "nil"
                 print("Document data: \(dataDescription)")
-                
                 DispatchQueue.main.async {
-                    self.celeb = document["celeb"] as! [Celeb]
+                    self.celeb = (document["celeb"] as! [[String: Any]]).compactMap { data -> Celeb? in
+                        return Celeb(dictionary: data)
+                    }
                 }
+                self.loading = false
             } else {
                 print("Document does not exist")
                 let docData: [String: Any] = [
@@ -110,8 +124,32 @@ class DataViewModel: ObservableObject {
                         print("Document successfully written!")
                     }
                 }
+                
+                self.loading = false
             }
         }
+    }
+    
+    func initFormatter() {
+        self.dateFormatter.dateStyle = .short
+        self.dateFormatter.timeStyle = .medium
+    }
+    
+    func calDates(since: Date) -> Int {
+        let calendar = Calendar.current
+
+        // Replace the hour (time) of both dates with 00:00
+        let date = calendar.startOfDay(for: since)
+        let now = Date()
+        
+        let components = calendar.dateComponents([.day], from: date, to: now)
+        
+        return components.day ?? 0
+    }
+    
+    func alert(message: String) {
+        self.showAlert = true
+        self.alertText = message
     }
     
     func addHeart(platform: String, account: String) {
@@ -124,12 +162,22 @@ class DataViewModel: ObservableObject {
             }
             // ...
           }
-          if let data = result?.data as? [String: Any], let status = data[""] as? Int {
+          if let data = result?.data as? [String: Any], let status = data["status"] as? Int {
               if status == 200 { // success
-                  self.getCeleb()
+                  for i in self.celeb.indices {
+                      if self.celeb[i].platform == platform && self.celeb[i].account == account {
+                          self.alert(message: "Successfully updated.")
+                          DispatchQueue.main.async {
+                              self.celeb[i].count += 1
+                              self.celeb[i].recent = Date()
+                          }
+                          break
+                      }
+                  }
               } else {
                   if let message = data["message"] as? String {
                       print(message)
+                      self.alert(message: message)
                   }
               }
           }
@@ -137,6 +185,10 @@ class DataViewModel: ObservableObject {
     }
     
     func manageFollow(platform: String, account: String, method: String = "add", title: String?, url: String?) {
+//#if DEBUG // test firebase functions in local
+//        functions.useEmulator(withHost: "localhost", port: 5001)
+//#endif
+        
         functions.httpsCallable("manageFollow").call(["platform": platform, "account": account, "method": method, "title": title, "url": url]) { result, error in
           if let error = error as NSError? {
             if error.domain == FunctionsErrorDomain {
@@ -148,20 +200,34 @@ class DataViewModel: ObservableObject {
           }
           if let data = result?.data as? [String: Any], let status = data["status"] as? Int {
               if status == 200 { // success
-                  self.showAlert = true
                   if method == "add" {
-                      self.alertText = "Successfully added."
+                      self.alert(message: "Successfully added.")
+                      DispatchQueue.main.async {
+                          self.celeb.append(Celeb(dictionary: ["account": account, "platform": platform, "count": 0, "recent": Date(), "since": Date(), "title": title, "url": url]))
+                      }
                   } else if method == "update" {
-                      self.alertText = "Successfully updated."
+                      for i in self.celeb.indices {
+                          if self.celeb[i].platform == platform && self.celeb[i].account == account {
+                              self.alert(message: "Successfully updated.")
+                              DispatchQueue.main.async {
+                                  self.celeb[i].title = title ?? ""
+                                  self.celeb[i].url = url ?? ""
+                              }
+                              break
+                          }
+                      }
                   } else if method == "delete" {
-                      self.alertText = "Successfully deleted."
+                      self.alert(message: "Successfully deleted.")
+                      DispatchQueue.main.async {
+                          self.celeb = self.celeb.filter( { (value: Celeb) -> Bool in return (value.platform != platform && value.account != account) } )
+                      }
                   } else {
-                      self.alertText = "Method error is occured..."
+                      self.alert(message: "Method error is occured...")
                   }
-                  self.getCeleb()
               } else {
                   if let message = data["message"] as? String {
                       print(message)
+                      self.alert(message: message)
                   }
               }
           }

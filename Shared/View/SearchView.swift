@@ -118,7 +118,7 @@ struct ProfileCell: View {
                 title: Text("Confirm"),
                 message: Text("Are you sure you want to add this profile?"),
                 primaryButton: .destructive(Text("Add"), action: {
-                    // viewModel.manageFollow(platform: "0", account: profile.snippet.channelId, method: "Add", title: profile.snippet.title, url: profile.snippet.thumbnails.default.url)
+                     viewModel.manageFollow(platform: "0", account: profile.snippet.channelId, method: "add", title: profile.snippet.title, url: profile.snippet.thumbnails.default.url)
                 }), secondaryButton: .cancel())
         }
     }
