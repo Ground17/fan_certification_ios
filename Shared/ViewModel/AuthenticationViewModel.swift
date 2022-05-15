@@ -22,9 +22,10 @@ class AuthenticationViewModel: ObservableObject {
     @Published var state: SignInState = .signedOut
     @Published var loading: Bool = false
     
-    @Published var showAlert: Bool = false
     @Published var signUp: SignUpState = .none
+    @Published var showAlert: Bool = false
     @Published var alertText: String = ""
+    @Published var checkDeleteAccount: Bool = false
     
     func closeAlert() {
         self.showAlert = false
@@ -178,6 +179,19 @@ class AuthenticationViewModel: ObservableObject {
             self.state = .signedOut
         } catch let signOutError as NSError {
             print("Error signing out: %@", signOutError)
+        }
+    }
+    
+    func deleteAccount() {
+        let firebaseAuth = Auth.auth()
+        firebaseAuth.currentUser?.delete { (error) in
+            if let error = error {
+                print(error.localizedDescription)
+                self.showAlert = true
+                self.alertText = error.localizedDescription
+            } else { // maybe success...
+                self.state = .signedOut
+            }
         }
     }
     
