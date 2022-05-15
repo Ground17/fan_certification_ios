@@ -130,31 +130,25 @@ class AuthenticationViewModel: ObservableObject {
     }
     
     func signInWithGoogle() {
-      // 1
-      if GIDSignIn.sharedInstance.hasPreviousSignIn() {
-        GIDSignIn.sharedInstance.restorePreviousSignIn { [unowned self] user, error in
-            authenticateUser(for: user, with: error)
+        if GIDSignIn.sharedInstance.hasPreviousSignIn() {
+            GIDSignIn.sharedInstance.restorePreviousSignIn { [unowned self] user, error in
+                authenticateUser(for: user, with: error)
+            }
+        } else {
+            guard let clientID = FirebaseApp.app()?.options.clientID else { return }
+
+            let configuration = GIDConfiguration(clientID: clientID)
+
+            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
+            guard let rootViewController = windowScene.windows.first?.rootViewController else { return }
+
+            GIDSignIn.sharedInstance.signIn(with: configuration, presenting: rootViewController) { [unowned self] user, error in
+              authenticateUser(for: user, with: error)
+            }
         }
-      } else {
-        // 2
-        guard let clientID = FirebaseApp.app()?.options.clientID else { return }
-        
-        // 3
-        let configuration = GIDConfiguration(clientID: clientID)
-        
-        // 4
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
-        guard let rootViewController = windowScene.windows.first?.rootViewController else { return }
-        
-        // 5
-        GIDSignIn.sharedInstance.signIn(with: configuration, presenting: rootViewController) { [unowned self] user, error in
-          authenticateUser(for: user, with: error)
-        }
-      }
     }
     
     private func authenticateUser(for user: GIDGoogleUser?, with error: Error?) {
-      // 1
       if let error = error {
           print(error.localizedDescription)
           self.showAlert = true
@@ -162,12 +156,10 @@ class AuthenticationViewModel: ObservableObject {
           return
       }
       
-      // 2
       guard let authentication = user?.authentication, let idToken = authentication.idToken else { return }
       
       let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: authentication.accessToken)
       
-      // 3
       Auth.auth().signIn(with: credential) { [unowned self] (_, error) in
         if let error = error {
             print(error.localizedDescription)
