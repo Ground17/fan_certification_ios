@@ -17,6 +17,11 @@ class DataViewModel: ObservableObject {
     @Published var showSearchConfirm: Bool = false
     @Published var alertText: String = ""
     
+    @Published var platform: String = "0"
+    @Published var account: String = ""
+    @Published var title: String = ""
+    @Published var url: String = ""
+    
     @Published var dateFormatter = DateFormatter()
     
     
@@ -98,6 +103,11 @@ class DataViewModel: ObservableObject {
     }
     
     func getCeleb() {
+        guard Auth.auth().currentUser != nil else {
+            print("We can't find current user signed in.")
+            return
+        }
+        
         self.loading = true
         let docRef = db.collection("Users").document(Auth.auth().currentUser!.uid)
         docRef.getDocument { (document, error) in
@@ -219,7 +229,7 @@ class DataViewModel: ObservableObject {
                   } else if method == "delete" {
                       self.alert(message: "Successfully deleted.")
                       DispatchQueue.main.async {
-                          self.celeb = self.celeb.filter( { (value: Celeb) -> Bool in return (value.platform != platform && value.account != account) } )
+                          self.celeb = self.celeb.filter( { (value: Celeb) -> Bool in return (value.platform != platform || value.account != account) } )
                       }
                   } else {
                       self.alert(message: "Method error is occured...")

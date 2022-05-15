@@ -191,7 +191,7 @@ exports.manageFollow = functions.https.onCall(async (data, context) => {
                         if (celeb[i].account == account && celeb[i].platform == platform) {
                             t.update(YouTubeRef, {count: YouTubeDoc.data().count - celeb[i].count, follow: YouTubeDoc.data().follow - 1});
 
-                            celeb = celeb.filter(el => (el.account != account && el.platform != platform));
+                            celeb = celeb.filter(el => !(el.account == account && el.platform == platform));
                             t.update(myRef, {celeb: celeb});
                             break;
                         }

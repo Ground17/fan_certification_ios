@@ -24,6 +24,7 @@ struct CelebView: View {
                 if self.viewModel.loading {
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle())
+                    Spacer()
                 } else {
                     if self.viewModel.celeb.isEmpty {
                         Button(action: {
@@ -80,6 +81,7 @@ struct CelebCell: View {
     let celeb: Celeb
     
     @State private var isExpanding = false
+    @State private var isWebView = false
 
     var body: some View {
         VStack {
@@ -104,38 +106,37 @@ struct CelebCell: View {
             
             if isExpanding {
                 VStack (alignment: .center) {
+                    Divider()
                     HStack {
-                        Button(action: {
-                            viewModel.showCelebDeleteConfirm = true
-                        }) {
-                            Text("delete")
-                                .alert(isPresented: $viewModel.showCelebDeleteConfirm) {
-                                    Alert(
-                                        title: Text("Comfirm"),
-                                        message: Text("Are you sure you want to delete this user?"),
-                                        primaryButton: .destructive(Text("Delete"), action: {
-                                            viewModel.manageFollow(platform: celeb.platform, account: celeb.account, method: "delete", title: nil, url: nil)
-                                        }), secondaryButton: .cancel())
+                        Text("delete")
+                            .onTapGesture {
+                                viewModel.platform = celeb.platform
+                                viewModel.account = celeb.account
+                                viewModel.showCelebDeleteConfirm = true
                             }
+                            .alert(isPresented: $viewModel.showCelebDeleteConfirm) {
+                                Alert(
+                                    title: Text("Comfirm"),
+                                    message: Text("Are you sure you want to delete this user?"),
+                                    primaryButton: .destructive(Text("Delete"), action: {
+                                        viewModel.manageFollow(platform: viewModel.platform, account: viewModel.account, method: "delete", title: nil, url: nil)
+                                    }), secondaryButton: .cancel())
                         }
                         Spacer()
-                        Button(action: {
-                            viewModel.showCelebUpdateConfirm = true
-                        }) {
-                            Text("refresh")
-                                .alert(isPresented: $viewModel.showCelebUpdateConfirm) {
-                                    Alert(
-                                        title: Text("Comfirm"),
-                                        message: Text("Are you sure you want to refresh this user?"),
-                                        primaryButton: .destructive(Text("Refresh"), action: {
-                                            viewModel.getYTChannel(query: celeb.account, update: true)
-                                        }), secondaryButton: .cancel())
+                        Text("refresh")
+                            .onTapGesture {
+                                viewModel.platform = celeb.platform
+                                viewModel.account = celeb.account
+                                viewModel.showCelebUpdateConfirm = true
                             }
+                            .alert(isPresented: $viewModel.showCelebUpdateConfirm) {
+                                Alert(
+                                    title: Text("Comfirm"),
+                                    message: Text("Are you sure you want to refresh this user?"),
+                                    primaryButton: .destructive(Text("Refresh"), action: {
+                                        viewModel.getYTChannel(query: viewModel.account, update: true)
+                                    }), secondaryButton: .cancel())
                         }
-                    }
-                    Divider()
-                    NavigationLink(destination: CustomWebView(url: "https://www.youtube.com/channel/\(celeb.account)")) {
-                            Text("View Profile")
                     }
                     Divider()
                     HStack (spacing: 0) {
@@ -184,9 +185,32 @@ struct CelebCell: View {
                     .padding()
                     .transition(.move(edge: .bottom))
                     .animation(.default)
+                    
+                    HStack {
+                        Image("youtube")
+                            .foregroundColor(Color("ColorPrimary"))
+                        Text("YouTube")
+                            .padding()
+                        Spacer()
+                        Text("View profile")
+                            .font(.caption)
+                            .bold()
+                            .foregroundColor(.red)
+                            .padding()
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        self.isWebView = true
+                    }
                 }
             }
         }
+        .background(Group {
+            NavigationLink(destination: CustomWebView(url: "https://www.youtube.com/channel/\(celeb.account)"), isActive: $isWebView) {
+                EmptyView()
+            }
+            .buttonStyle(PlainButtonStyle())
+        }.disabled(true))
     }
 }
 

@@ -8,8 +8,21 @@
 import SwiftUI
 
 struct RankView: View {
+    var platforms = ["YouTube"]
+    
+    @State private var selectedIndex = 0
     var body: some View {
-        Text("Getting ready...")
+        VStack {
+            Picker(selection: $selectedIndex, label: Text("Platform: ")) {
+                ForEach(0 ..< platforms.count) {
+                    Text(self.platforms[$0])
+                }
+            }
+            Spacer()
+            Text("Getting ready...")
+            Spacer()
+        }
+        .pickerStyle(SegmentedPickerStyle())
     }
 }
 

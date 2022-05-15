@@ -91,6 +91,7 @@ struct SearchView: View { // webview로 확인
 struct ProfileCell: View {
     @EnvironmentObject var viewModel: DataViewModel
     let profile: Item
+    @State private var isWebView: Bool = false
 
     var body: some View {
         HStack {
@@ -100,25 +101,38 @@ struct ProfileCell: View {
             VStack(alignment: .leading) {
                 Text(profile.snippet.title).bold()
                 Text(profile.snippet.description).font(.caption)
-                NavigationLink(destination: CustomWebView(url: "https://www.youtube.com/channel/\(profile.snippet.channelId)")) {
-                    Text("Profile Link")
-                        .font(.caption2)
-                        .bold()
-                        .foregroundColor(.red)
-                }
+                Text("View profile")
+                    .font(.caption)
+                    .bold()
+                    .foregroundColor(.red)
+                    .padding(.top)
+                    .onTapGesture {
+                        self.isWebView = true
+                    }
             }
             .padding()
+            Spacer()
         }
+        .contentShape(Rectangle())
+        .background(Group {
+            NavigationLink(destination: CustomWebView(url: "https://www.youtube.com/channel/\(profile.snippet.channelId)"), isActive: $isWebView) {
+                    EmptyView() }
+                .buttonStyle(PlainButtonStyle())
+        }.disabled(true))
         .onTapGesture {
+            viewModel.platform = "0"
+            viewModel.account = profile.snippet.channelId
+            viewModel.title = profile.snippet.title
+            viewModel.url = profile.snippet.thumbnails.default.url
             viewModel.showSearchConfirm = true
             print("The whole HStack is tappable now!")
         }
         .alert(isPresented: $viewModel.showSearchConfirm) {
             Alert(
                 title: Text("Confirm"),
-                message: Text("Are you sure you want to add this profile?"),
+                message: Text("Are you sure you want to add \(viewModel.title)?"),
                 primaryButton: .destructive(Text("Add"), action: {
-                     viewModel.manageFollow(platform: "0", account: profile.snippet.channelId, method: "add", title: profile.snippet.title, url: profile.snippet.thumbnails.default.url)
+                    viewModel.manageFollow(platform: viewModel.platform, account: viewModel.account, method: "add", title: viewModel.title, url: viewModel.url)
                 }), secondaryButton: .cancel())
         }
     }
