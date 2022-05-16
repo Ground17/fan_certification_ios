@@ -103,6 +103,15 @@ class DataViewModel: ObservableObject {
     }
     
     func getCeleb() {
+//    #if DEBUG // test firebase functions in local
+//            functions.useEmulator(withHost: "localhost", port: 5001)
+//            let settings = Firestore.firestore().settings
+//            settings.host = "localhost:8080"
+//            settings.isPersistenceEnabled = false
+//            settings.isSSLEnabled = false
+//            Firestore.firestore().settings = settings
+//    #endif
+        
         guard Auth.auth().currentUser != nil else {
             print("We can't find current user signed in.")
             return
@@ -195,10 +204,6 @@ class DataViewModel: ObservableObject {
     }
     
     func manageFollow(platform: String, account: String, method: String = "add", title: String?, url: String?) {
-//#if DEBUG // test firebase functions in local
-//        functions.useEmulator(withHost: "localhost", port: 5001)
-//#endif
-        
         functions.httpsCallable("manageFollow").call(["platform": platform, "account": account, "method": method, "title": title, "url": url]) { result, error in
           if let error = error as NSError? {
             if error.domain == FunctionsErrorDomain {

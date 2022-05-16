@@ -169,6 +169,8 @@ struct CelebCell: View {
                         .frame(minWidth: 0, maxWidth: .infinity)
                         .background(Color(red: 244 / 255, green: 240 / 255, blue: 254 / 255).clipShape(RoundedRectangle(cornerRadius: 5.0)))
                         .onTapGesture {
+                            viewModel.platform = celeb.platform
+                            viewModel.account = celeb.account
                             viewModel.showCelebCountConfirm = true
                             print("The VStack is tappable now!")
                         }
@@ -177,7 +179,7 @@ struct CelebCell: View {
                                 title: Text("Comfirm"),
                                 message: Text("Are you sure you want to add likes of this user?"),
                                 primaryButton: .destructive(Text("Add"), action: {
-                                    viewModel.addHeart(platform: "0", account: celeb.account)
+                                    viewModel.addHeart(platform: viewModel.platform, account: viewModel.account)
                                 }), secondaryButton: .cancel())
                         }
                         .padding(.trailing)

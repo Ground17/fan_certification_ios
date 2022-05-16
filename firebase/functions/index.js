@@ -45,20 +45,28 @@ exports.addHeart = functions.https.onCall(async (data, context) => {
                 let celeb = myDoc.data().celeb;
                 let hearts = YouTubeDoc.data().count + 1;
                 
+                let isAdded = false;
                 for (let i = 0; i < celeb.length; i++) {
-                    const now = new Date();
-                    if ((celeb[i].recent.seconds + 300) * 1000 < now) {
-                        // Note: this could be done without a transaction
-                        //       by updating the population using FieldValue.increment()
-                        t.update(YouTubeRef, {count: hearts});
-
-                        celeb[i].recent = now;
-                        celeb[i].count = celeb[i].count + 1;
-                        t.update(myRef, {celeb: celeb});
-                        break;
-                    } else {
-                        throw 'Sorry! Try after 5 minutes.';
+                    if (celeb[i].account == account && celeb[i].platform == platform) {
+                        isAdded = true;
+                        const now = new Date();
+                        if ((celeb[i].recent.seconds + 300) * 1000 < now.getTime()) {
+                            // Note: this could be done without a transaction
+                            //       by updating the population using FieldValue.increment()
+                            t.update(YouTubeRef, {count: hearts});
+    
+                            celeb[i].recent = now;
+                            celeb[i].count = celeb[i].count + 1;
+                            t.update(myRef, {celeb: celeb});
+                            break;
+                        } else {
+                            throw 'Sorry! Try after 5 minutes.';
+                        }
                     }
+                }
+
+                if (!isAdded) {
+                    throw 'Sorry! Internal error is occured.';
                 }
             })
             .then(() => {
