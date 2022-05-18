@@ -69,6 +69,7 @@ struct CelebView: View {
                 )
             }
         }
+        .navigationViewStyle(.stack)
         .onAppear() {
             self.viewModel.getCeleb()
             self.viewModel.initFormatter()

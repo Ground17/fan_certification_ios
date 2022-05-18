@@ -85,6 +85,7 @@ struct SearchView: View { // webview로 확인
                 )
             }
         }
+        .navigationViewStyle(.stack)
     }
 }
 

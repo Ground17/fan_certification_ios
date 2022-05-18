@@ -108,6 +108,7 @@ struct LoginView: View {
             }
             .padding()
         }
+        .navigationViewStyle(.stack)
         .alert(isPresented: $viewModel.showAlert) {
             Alert(
                 title: Text("Alert"),
