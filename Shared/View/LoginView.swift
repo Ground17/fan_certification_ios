@@ -111,7 +111,7 @@ struct LoginView: View {
         .navigationViewStyle(.stack)
         .alert(isPresented: $viewModel.showAlert) {
             Alert(
-                title: Text("Alert"),
+                title: Text("Notice"),
                 message: Text(viewModel.alertText),
                 dismissButton: .default(Text("OK"), action: {
                     viewModel.closeAlert()

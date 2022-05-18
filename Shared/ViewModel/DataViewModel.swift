@@ -14,6 +14,8 @@ class DataViewModel: ObservableObject {
     @Published var showCelebDeleteConfirm: Bool = false
     @Published var showCelebUpdateConfirm: Bool = false
     @Published var showCelebCountConfirm: Bool = false
+    @Published var showCelebProfileConfirm: Bool = false
+    @Published var showSearchProfileConfirm: Bool = false
     @Published var showSearchConfirm: Bool = false
     @Published var alertText: String = ""
     
@@ -131,20 +133,24 @@ class DataViewModel: ObservableObject {
                 }
                 self.loading = false
             } else {
-                print("Document does not exist")
-                let docData: [String: Any] = [
-                    "celeb": []
-                ]
-                
-                docRef.setData(docData) { err in
-                    if let err = err {
-                        print("Error writing document: \(err)")
-                    } else {
-                        print("Document successfully written!")
+                if (error != nil) {
+                    print("Server error: \(String(describing: error?.localizedDescription))")
+                } else {
+                    print("Document does not exist")
+                    let docData: [String: Any] = [
+                        "celeb": []
+                    ]
+                    
+                    docRef.setData(docData) { err in
+                        if let err = err {
+                            print("Error writing document: \(err)")
+                        } else {
+                            print("Document successfully written!")
+                        }
                     }
+                    
+                    self.loading = false
                 }
-                
-                self.loading = false
             }
         }
     }

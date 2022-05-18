@@ -90,7 +90,7 @@ exports.addHeart = functions.https.onCall(async (data, context) => {
 });
 
 exports.manageFollow = functions.https.onCall(async (data, context) => {
-    const method = data.method; // add, delete
+    const method = data.method; // add, updqte, delete
     const platform = data.platform;
     const account = data.account;
     const title = data.title;

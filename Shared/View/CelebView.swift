@@ -16,60 +16,57 @@ struct CelebView: View {
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
     var body: some View {
-        NavigationView {
-            VStack {
-                GADBannerViewController()
-                        .frame(width: GADAdSizeBanner.size.width, height: GADAdSizeBanner.size.height)
-                Divider()
-                if self.viewModel.loading {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle())
+        VStack {
+            GADBannerViewController()
+                    .frame(width: GADAdSizeBanner.size.width, height: GADAdSizeBanner.size.height)
+            Divider()
+            if self.viewModel.loading {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle())
+                Spacer()
+            } else {
+                if self.viewModel.celeb.isEmpty {
+                    Button(action: {
+                        self.tabSelection = 2
+                    }) {
+                        Text("You can search celebrity in YouTube!")
+                    }
                     Spacer()
                 } else {
-                    if self.viewModel.celeb.isEmpty {
-                        Button(action: {
-                            self.tabSelection = 2
-                        }) {
-                            Text("You can search celebrity in YouTube!")
-                        }
-                        Spacer()
-                    } else {
-                        HStack {
-                            Text("\(viewModel.dateFormatter.string(from: currentDate))")
-                                .padding()
-                                .onReceive(timer) { input in
-                                    currentDate = input
-                                }
-                            Spacer()
-                            Button(action: {
-                                self.viewModel.getCeleb()
-                            }) {
-                                Text("refresh")
-                                    .padding()
+                    HStack {
+                        Text("\(viewModel.dateFormatter.string(from: currentDate))")
+                            .padding()
+                            .onReceive(timer) { input in
+                                currentDate = input
                             }
+                        Spacer()
+                        Button(action: {
+                            self.viewModel.getCeleb()
+                        }) {
+                            Text("refresh")
+                                .padding()
                         }
-                        
-                        List(self.viewModel.celeb, id: \.account) { celeb in
-                            CelebCell(celeb: celeb)
-                                .environmentObject(viewModel)
-                        }
+                    }
+                    
+                    List(self.viewModel.celeb, id: \.account) { celeb in
+                        CelebCell(celeb: celeb)
+                            .environmentObject(viewModel)
                     }
                 }
             }
-            .pickerStyle(SegmentedPickerStyle())
-            .navigationBarTitle("Main")
-            // .navigationBarHidden(true)
-            .alert(isPresented: $viewModel.showAlert) {
-                Alert(
-                    title: Text("Alert"),
-                    message: Text(viewModel.alertText),
-                    dismissButton: .default(Text("OK"), action: {
-                        viewModel.closeAlert()
-                    })
-                )
-            }
         }
-        .navigationViewStyle(.stack)
+        .pickerStyle(SegmentedPickerStyle())
+        .navigationBarTitle("Main")
+        // .navigationBarHidden(true)
+        .alert(isPresented: $viewModel.showAlert) {
+            Alert(
+                title: Text("Alert"),
+                message: Text(viewModel.alertText),
+                dismissButton: .default(Text("OK"), action: {
+                    viewModel.closeAlert()
+                })
+            )
+        }
         .onAppear() {
             self.viewModel.getCeleb()
             self.viewModel.initFormatter()
@@ -82,7 +79,6 @@ struct CelebCell: View {
     let celeb: Celeb
     
     @State private var isExpanding = false
-    @State private var isWebView = false
 
     var body: some View {
         VStack {
@@ -203,17 +199,32 @@ struct CelebCell: View {
                     }
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        self.isWebView = true
+                        viewModel.platform = celeb.platform
+                        viewModel.account = celeb.account
+                        viewModel.showCelebProfileConfirm = true
+                    }
+                    .alert(isPresented: $viewModel.showCelebProfileConfirm) {
+                        Alert(
+                            title: Text("Comfirm"),
+                            message: Text("Go to \(celeb.title)'s YouTube profile by launching YouTube app or another browser app. Would you like to go on?"),
+                            primaryButton: .destructive(Text("Go"), action: {
+                                guard let url = URL(string: "https://www.youtube.com/channel/\(viewModel.account)") else {
+                                    viewModel.showAlert = true
+                                    viewModel.alertText = "Internal app error..."
+                                    return
+                                }
+                                UIApplication.shared.open(url)
+                            }), secondaryButton: .cancel())
                     }
                 }
             }
         }
-        .background(Group {
-            NavigationLink(destination: CustomWebView(url: "https://www.youtube.com/channel/\(celeb.account)"), isActive: $isWebView) {
-                EmptyView()
-            }
-            .buttonStyle(PlainButtonStyle())
-        }.disabled(true))
+//        .background(Group {
+//            NavigationLink(destination: CustomWebView(url: "https://www.youtube.com/channel/\(celeb.account)"), isActive: $isWebView) {
+//                EmptyView()
+//            }
+//            .buttonStyle(PlainButtonStyle())
+//        }.disabled(true))
     }
 }
 
