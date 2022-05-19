@@ -224,3 +224,76 @@ exports.manageFollow = functions.https.onCall(async (data, context) => {
 
     return {status: 400, message: "Unknown error"}
 });
+
+exports.initUser = functions.https.onCall(async (data, context) => {
+    // Checking that the user is authenticated.
+    if (!context.auth) {
+        // Throwing an HttpsError so that the client gets the error details.
+        throw new functions.https.HttpsError('failed-precondition', 'The function must be called ' +
+            'while authenticated.');
+    }
+
+    let myDoc = admin.firestore().collection('Users').doc(context.auth.uid);
+    let snapshot = await myDoc.get();
+
+    if (!snapshot.exists) {
+        return await myDoc.set({celeb: []})
+            .then(() => {
+                return {status: 200, message: "success"};
+            })
+            .catch((e) => {
+                return {status: 400, message: e};
+            });
+    } else {
+        return {status: 400, message: "User data already exists."};
+    }
+
+    return {status: 400, message: "Unknown error."};
+});
+
+exports.deleteAccount = functions.https.onCall(async (data, context) => {
+    // Checking that the user is authenticated.
+    if (!context.auth) {
+        // Throwing an HttpsError so that the client gets the error details.
+        throw new functions.https.HttpsError('failed-precondition', 'The function must be called ' +
+            'while authenticated.');
+    }
+
+    // transaction
+    const YouTubeDocs = [];
+    const myRef = admin.firestore().collection('Users').doc(context.auth.uid);
+
+    const celebDoc = await myRef.get();
+    let celeb = celebDoc.data().celeb || [];
+    
+    try {
+        return await admin.firestore().runTransaction(async (t) => {
+            for (let i = 0; i < celeb.length; i++) {
+                const YouTubeRef = admin.firestore().collection('YouTube').doc(celeb[i].account);
+                YouTubeDocs.push(await t.get(YouTubeRef));
+            }
+            const snapshot = await t.get(myRef);
+
+            for (let i = 0; i < celeb.length; i++) {
+                t.update(YouTubeDocs[i].ref, {count: YouTubeDocs[i].data().count - celeb[i].count, follow: YouTubeDocs[i].data().follow - 1});
+            }
+
+            if (snapshot.exists) {
+                t.delete(myRef);
+            }
+        })
+        .then(() => {
+            console.log('Transaction success!');
+            return {status: 200, message: "success"};
+        })
+        .catch((e) => {
+            console.log('Transaction failure:', e);
+            return {status: 400, message: e};
+        });
+    } catch (e) {
+        console.log('Transaction failure:', e);
+        return {status: 400, message: e};
+    }
+
+    return {status: 400, message: "Unknown error."};
+});

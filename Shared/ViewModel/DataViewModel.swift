@@ -14,8 +14,6 @@ class DataViewModel: ObservableObject {
     @Published var showCelebDeleteConfirm: Bool = false
     @Published var showCelebUpdateConfirm: Bool = false
     @Published var showCelebCountConfirm: Bool = false
-    @Published var showCelebProfileConfirm: Bool = false
-    @Published var showSearchProfileConfirm: Bool = false
     @Published var showSearchConfirm: Bool = false
     @Published var alertText: String = ""
     
@@ -133,19 +131,23 @@ class DataViewModel: ObservableObject {
                 }
                 self.loading = false
             } else {
-                if (error != nil) {
-                    print("Server error: \(String(describing: error?.localizedDescription))")
-                } else {
-                    print("Document does not exist")
-                    let docData: [String: Any] = [
-                        "celeb": []
-                    ]
-                    
-                    docRef.setData(docData) { err in
-                        if let err = err {
-                            print("Error writing document: \(err)")
+                print("Document does not exist")
+                self.functions.httpsCallable("initUser").call() { result, error in
+                    if let error = error as NSError? {
+                        if error.domain == FunctionsErrorDomain {
+                            let code = FunctionsErrorCode(rawValue: error.code)
+                            let message = error.localizedDescription
+                            let details = error.userInfo[FunctionsErrorDetailsKey]
+                        }
+                        // ...
+                    }
+                    if let data = result?.data as? [String: Any], let status = data["status"] as? Int {
+                        if status == 200 { // success
+                            print("init success!")
                         } else {
-                            print("Document successfully written!")
+                            if let message = data["message"] as? String {
+                                print(message)
+                            }
                         }
                     }
                     

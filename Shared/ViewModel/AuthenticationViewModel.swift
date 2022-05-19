@@ -51,7 +51,7 @@ class AuthenticationViewModel: ObservableObject {
                     self.state = .signedIn
                 } else {
                     self.showAlert = true
-                    self.alertText = "A confirmation email has been sent to verify that this is a valid email. Please check your mailbox."
+                    self.alertText = "A confirmation email has been sent to verify that this is a valid email. Please check your mailbox. If you haven't received an email, please try again in a few minutes."
                     
                     Auth.auth().currentUser?.sendEmailVerification { (error) in
                         if error != nil {
@@ -183,14 +183,41 @@ class AuthenticationViewModel: ObservableObject {
     }
     
     func deleteAccount() {
-        let firebaseAuth = Auth.auth()
-        firebaseAuth.currentUser?.delete { (error) in
-            if let error = error {
-                print(error.localizedDescription)
-                self.showAlert = true
-                self.alertText = error.localizedDescription
-            } else { // maybe success...
-                self.state = .signedOut
+        Functions.functions().httpsCallable("deleteAccount").call() { result, error in
+            if let error = error as NSError? {
+                if error.domain == FunctionsErrorDomain {
+                    let code = FunctionsErrorCode(rawValue: error.code)
+                    let message = error.localizedDescription
+                    let details = error.userInfo[FunctionsErrorDetailsKey]
+                }
+                // ...
+            }
+            
+            if let data = result?.data as? [String: Any], let status = data["status"] as? Int {
+                if status == 200 { // success
+                    print("Deletion success!")
+                    
+                    let firebaseAuth = Auth.auth()
+                    firebaseAuth.currentUser?.delete { (error) in
+                        if let error = error {
+                            print(error.localizedDescription)
+                            self.showAlert = true
+                            self.alertText = error.localizedDescription
+                            self.signOut()
+                        } else { // maybe success...
+                            self.showAlert = true
+                            self.alertText = "Deletion success!"
+                            print("Deletion success!")
+                            self.state = .signedOut
+                        }
+                    }
+                } else {
+                    if let message = data["message"] as? String {
+                        self.showAlert = true
+                        self.alertText = message
+                        print(message)
+                    }
+                }
             }
         }
     }
