@@ -84,7 +84,7 @@ struct RankCell: View {
                 Text(rank.title)
                     .bold()
                 Spacer()
-                Text("\(rank.count)")
+                Text("♥ \(rank.count)")
                     .foregroundColor(Color.red)
                     .bold()
             }

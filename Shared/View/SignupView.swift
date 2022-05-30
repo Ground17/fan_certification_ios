@@ -41,7 +41,7 @@ struct SignupView: View {
                 .cornerRadius(5.0)
                 .padding(.bottom, 20)
             Button(action: {
-                viewModel.signUp(id: id, pw: pw, pwConfirm: pwConfirm) }) {
+                viewModel.signUp(id: id, pw: pw, pwConfirm: pwConfirm, view: self) }) {
                 Text("Sign up")
                     .foregroundColor(Color("ColorPrimary"))
                     .frame(minWidth: 0, maxWidth: .infinity)

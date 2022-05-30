@@ -7,25 +7,24 @@
 
 import Firebase
 import GoogleSignIn
+import Combine
 
 class AuthenticationViewModel: ObservableObject {
     enum SignInState {
         case signedIn
         case signedOut
     }
-    
-    enum SignUpState {
-        case signedUp
-        case none
-    }
 
     @Published var state: SignInState = .signedOut
     @Published var loading: Bool = false
     
-    @Published var signUp: SignUpState = .none
+    @Published var isSignUp: Bool = false
+    @Published var isResetPassword: Bool = false
     @Published var showAlert: Bool = false
     @Published var alertText: String = ""
     @Published var checkDeleteAccount: Bool = false
+    
+    var cancellable: AnyCancellable? // to pop screen
     
     func closeAlert() {
         self.showAlert = false
@@ -64,7 +63,7 @@ class AuthenticationViewModel: ObservableObject {
         }
     }
     
-    func signUp(id: String, pw: String, pwConfirm: String) {
+    func signUp(id: String, pw: String, pwConfirm: String, view: SignupView) {
         self.loading = true
         
         guard id != "" && pw != "" && pwConfirm != "" else {
@@ -99,7 +98,8 @@ class AuthenticationViewModel: ObservableObject {
                     print("User created")
                     self.showAlert = true
                     self.alertText = "A confirmation email has been sent to verify that this is a valid email. Please check your mailbox."
-                    self.signUp = .signedUp
+                    self.isSignUp = false
+                    view.presentationMode.wrappedValue.dismiss()
                 
                     Auth.auth().currentUser?.sendEmailVerification { (error) in
                         if error != nil {
@@ -108,6 +108,24 @@ class AuthenticationViewModel: ObservableObject {
                     }
                     self.loading = false
             }
+        }
+    }
+    
+    func resetPasssword(id: String, view: ResetPasswordView) {
+        self.loading = true
+        Auth.auth().sendPasswordReset(withEmail: id) { (error) in
+            self.loading = false
+            if error != nil {
+                print("email send error")
+                self.showAlert = true
+                self.alertText = "An error occurred while sending the email. Please check your email address again."
+                return
+            }
+            
+            self.showAlert = true
+            self.alertText = "A reset email has been sent. Please check your mailbox."
+            self.isResetPassword = false
+            view.presentationMode.wrappedValue.dismiss()
         }
     }
     

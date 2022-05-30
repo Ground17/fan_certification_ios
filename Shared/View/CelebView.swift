@@ -158,7 +158,7 @@ struct CelebCell: View {
                         .padding(.trailing)
                         
                         VStack (alignment: .center) { // 좋아요
-                            Text("Likes")
+                            Text("Likes ♥")
                                 .fontWeight(.bold)
                                 .foregroundColor(Color(red: 133 / 255, green: 93 / 255, blue: 246 / 255))
                             Text("\(celeb.count)")

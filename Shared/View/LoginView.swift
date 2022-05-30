@@ -17,7 +17,6 @@ struct LoginView: View {
     
     @State private var id: String = ""
     @State private var pw: String = ""
-    @State private var isSignUp: Bool = false
     @State private var showAlert: Bool = false
     
     @State var currentNonce: String? // apple login에만 필요
@@ -48,8 +47,8 @@ struct LoginView: View {
                     .padding()
                     .background(Color("ColorPrimary"))
                     .cornerRadius(5.0)
-                NavigationLink(destination: SignupView(), isActive: $isSignUp) {
-                    Button(action: { self.isSignUp = true }) { // navigation
+                NavigationLink(destination: SignupView(), isActive: $viewModel.isSignUp) {
+                    Button(action: { viewModel.isSignUp = true }) { // navigation
                         Text("Sign up")
                             .foregroundColor(Color("ColorPrimary"))
                             .frame(minWidth: 0, maxWidth: .infinity)
@@ -57,7 +56,15 @@ struct LoginView: View {
                         .padding()
                         .background(Color.white)
                         .cornerRadius(5.0)
-                        .padding(.bottom, 20)
+                        .padding(.bottom, 10)
+                }.navigationBarTitle("Log in")
+                
+                NavigationLink(destination: ResetPasswordView(), isActive: $viewModel.isResetPassword) {
+                    Button(action: { viewModel.isResetPassword = true }) { // navigation
+                        Text("Forgot your password?")
+                            .foregroundColor(Color("ColorPrimary"))
+                            .frame(minWidth: 0, maxWidth: .infinity)
+                    }
                 }.navigationBarTitle("Log in")
                 
                 Divider()
@@ -115,10 +122,6 @@ struct LoginView: View {
                 message: Text(viewModel.alertText),
                 dismissButton: .default(Text("OK"), action: {
                     viewModel.closeAlert()
-                    if viewModel.signUp == .signedUp {
-                        viewModel.signUp = .none
-                        self.isSignUp = false
-                    }
                 })
             )
         }
