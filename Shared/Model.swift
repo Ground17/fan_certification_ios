@@ -37,6 +37,24 @@ struct Celeb: Codable {
     }
 }
 
+struct Rank: Codable {
+    let account: String
+    var rankNumber: Int = 0
+    let count: Int
+    let follow: Int
+    var title: String
+    var url: String
+    
+    init(dictionary: [String: Any], account: String, rankNumber: Int) {
+        self.account = account
+        self.rankNumber = rankNumber
+        self.count = dictionary["count"] as? Int ?? 0
+        self.follow = dictionary["follow"] as? Int ?? 0
+        self.title = dictionary["title"] as? String ?? ""
+        self.url = dictionary["url"] as? String ?? ""
+    }
+}
+
 struct Response: Codable {
     let items: [Item]
 }

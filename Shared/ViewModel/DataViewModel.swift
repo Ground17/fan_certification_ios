@@ -14,6 +14,7 @@ class DataViewModel: ObservableObject {
     @Published var showCelebDeleteConfirm: Bool = false
     @Published var showCelebUpdateConfirm: Bool = false
     @Published var showCelebCountConfirm: Bool = false
+    @Published var showRankUpdateConfirm: Bool = false
     @Published var showSearchConfirm: Bool = false
     @Published var alertText: String = ""
     
@@ -27,6 +28,7 @@ class DataViewModel: ObservableObject {
     
     @Published var items: [Item] = []
     @Published var celeb: [Celeb] = []
+    @Published var rank: [Rank] = []
     
     lazy private var functions = Functions.functions()
     private let db = Firestore.firestore()
@@ -155,6 +157,34 @@ class DataViewModel: ObservableObject {
                 }
             }
         }
+    }
+    
+    func getRank() {
+        guard Auth.auth().currentUser != nil else {
+            print("We can't find current user signed in.")
+            return
+        }
+        
+        self.loading = true
+        db.collection("YouTube").order(by: "count", descending: true).limit(to: 25)
+            .getDocuments() { (querySnapshot, err) in
+                    if let err = err {
+                        print("Error getting documents: \(err)")
+                        self.loading = false
+                    } else {
+                        DispatchQueue.main.async {
+                            self.rank.removeAll()
+                            var i = 0
+                            for document in querySnapshot!.documents {
+                                i += 1
+                                print("\(document.documentID) => \(document.data())")
+                                
+                                self.rank.append(Rank(dictionary: document.data(), account: document.documentID, rankNumber: i))
+                            }
+                        }
+                        self.loading = false
+                    }
+            }
     }
     
     func initFormatter() {

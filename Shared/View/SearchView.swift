@@ -52,13 +52,20 @@ struct SearchView: View { // webview로 확인
                         .onTapGesture {
                             self.isEditing = true
                         }
+//                        .onSubmit {
+//                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+//                            self.isEditing = false
+//                            viewModel.getYTChannel(query: searchText)
+//                        }
          
                     if isEditing {
                         Button(action: {
                             // Dismiss the keyboard
                             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                             self.isEditing = false
-                            viewModel.getYTChannel(query: searchText)
+                            if searchText.count > 0 {
+                                viewModel.getYTChannel(query: searchText)
+                            }
                         }) {
                             Text("Submit")
                         }
@@ -135,7 +142,7 @@ struct ProfileCell: View {
         .background(Group {
             NavigationLink(destination: CustomWebView(url: "https://www.youtube.com/channel/\(profile.snippet.channelId)"), isActive: $isWebView) {
                     EmptyView() }
-                .buttonStyle(PlainButtonStyle())
+            .opacity(0)
         }.disabled(true))
 //        .alert(isPresented: $viewModel.showSearchProfileConfirm) {
 //            Alert(

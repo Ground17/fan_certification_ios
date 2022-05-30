@@ -148,7 +148,9 @@ struct CelebCell: View {
                                 .font(.title)
                                 .foregroundColor(Color(red: 237 / 255, green: 96 / 255, blue: 91 / 255))
                             Text("since: \(viewModel.dateFormatter.string(from: celeb.since))")
+                                .font(.caption)
                                 .foregroundColor(Color(red: 237 / 255, green: 96 / 255, blue: 91 / 255))
+                                .fixedSize(horizontal: false, vertical: true)
                                 .multilineTextAlignment(.leading)
                         }
                         .frame(minWidth: 0, maxWidth: .infinity)
@@ -163,7 +165,9 @@ struct CelebCell: View {
                                 .font(.title)
                                 .foregroundColor(Color(red: 133 / 255, green: 93 / 255, blue: 246 / 255))
                             Text("last: \(viewModel.dateFormatter.string(from: celeb.recent))")
+                                .font(.caption)
                                 .foregroundColor(Color(red: 133 / 255, green: 93 / 255, blue: 246 / 255))
+                                .fixedSize(horizontal: false, vertical: true)
                                 .multilineTextAlignment(.leading)
                         }
                         .frame(minWidth: 0, maxWidth: .infinity)
@@ -212,7 +216,7 @@ struct CelebCell: View {
             NavigationLink(destination: CustomWebView(url: "https://www.youtube.com/channel/\(celeb.account)"), isActive: $isWebView) {
                 EmptyView()
             }
-            .buttonStyle(PlainButtonStyle())
+            .opacity(0)
         }.disabled(true))
 //        .alert(isPresented: $viewModel.showCelebProfileConfirm) {
 //            Alert(
